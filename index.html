@@ -1,0 +1,512 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Pedidos Frigo Sol</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial;
+}
+
+body{
+    background:#111;
+    color:white;
+    padding:15px;
+}
+
+.container{
+    max-width:500px;
+    margin:auto;
+}
+
+.logo{
+    background:#b30000;
+    padding:25px;
+    border-radius:20px;
+    text-align:center;
+    margin-bottom:20px;
+}
+
+.logo h1{
+    font-size:32px;
+}
+
+.card{
+    background:#1f1f1f;
+    padding:20px;
+    border-radius:20px;
+    margin-bottom:20px;
+}
+
+.card h2{
+    color:#ff4d4d;
+    margin-bottom:15px;
+}
+
+input{
+    width:100%;
+    padding:14px;
+    margin-bottom:12px;
+    border:none;
+    border-radius:12px;
+    background:#333;
+    color:white;
+}
+
+button{
+    width:100%;
+    padding:16px;
+    border:none;
+    border-radius:15px;
+    background:#b30000;
+    color:white;
+    font-size:18px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:hover{
+    background:red;
+}
+
+.produto{
+    background:#2b2b2b;
+    padding:15px;
+    border-radius:15px;
+    margin-bottom:12px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.addBtn{
+    width:auto;
+    padding:10px 15px;
+    font-size:14px;
+}
+
+.total{
+    margin-top:15px;
+    font-size:22px;
+    font-weight:bold;
+}
+
+.pedido{
+    background:#2b2b2b;
+    padding:15px;
+    border-radius:15px;
+    margin-bottom:12px;
+}
+
+.hidden{
+    display:none;
+}
+
+.usuarioInfo{
+    margin-bottom:15px;
+    color:#00ff99;
+    font-weight:bold;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="logo">
+<h1>Pedidos Frigo Sol</h1>
+<p>Pedidos de carnes para mercados</p>
+</div>
+
+<!-- LOGIN -->
+
+<div id="loginTela" class="card">
+
+<h2>Login do Mercado</h2>
+
+<input type="text" id="usuario" placeholder="Usuário">
+
+<input type="password" id="senha" placeholder="Senha">
+
+<button onclick="login()">Entrar</button>
+
+<br><br>
+
+<h2>Cadastrar Mercado</h2>
+
+<input type="text" id="novoUsuario" placeholder="Novo usuário">
+
+<input type="password" id="novaSenha" placeholder="Nova senha">
+
+<button onclick="cadastrarMercado()">
+Cadastrar Mercado
+</button>
+
+</div>
+
+<!-- APP -->
+
+<div id="appTela" class="hidden">
+
+<div class="usuarioInfo">
+Mercado Logado:
+<span id="mercadoLogado"></span>
+</div>
+
+<div class="card">
+
+<h2>Fazer Pedido</h2>
+
+<div class="produto">
+<div>
+<h3>Picanha</h3>
+<p>R$ 49,90/kg</p>
+</div>
+
+<button class="addBtn"
+onclick="addProduto('Picanha',49.90)">
+Adicionar
+</button>
+</div>
+
+<div class="produto">
+<div>
+<h3>Costela</h3>
+<p>R$ 29,90/kg</p>
+</div>
+
+<button class="addBtn"
+onclick="addProduto('Costela',29.90)">
+Adicionar
+</button>
+</div>
+
+<div class="produto">
+<div>
+<h3>Contra Filé</h3>
+<p>R$ 39,90/kg</p>
+</div>
+
+<button class="addBtn"
+onclick="addProduto('Contra Filé',39.90)">
+Adicionar
+</button>
+</div>
+
+<div class="produto">
+<div>
+<h3>Linguiça</h3>
+<p>R$ 19,90/kg</p>
+</div>
+
+<button class="addBtn"
+onclick="addProduto('Linguiça',19.90)">
+Adicionar
+</button>
+</div>
+
+<div class="total">
+Total: R$ <span id="total">0.00</span>
+</div>
+
+<br>
+
+<button onclick="finalizarPedido()">
+Enviar Pedido
+</button>
+
+</div>
+
+<div class="card">
+
+<h2>Pedidos do Mercado</h2>
+
+<div id="listaPedidos"></div>
+
+</div>
+
+<button onclick="logout()">
+Sair
+</button>
+
+</div>
+
+<!-- PAINEL ADMIN -->
+
+<div id="adminTela" class="hidden">
+
+<div class="card">
+
+<h2>Painel do Frigorífico</h2>
+
+<div id="todosPedidos"></div>
+
+</div>
+
+<button onclick="logout()">
+Sair
+</button>
+
+</div>
+
+</div>
+
+<script>
+
+let total = 0;
+let carrinho = [];
+let usuarioAtual = '';
+
+let usuarios =
+JSON.parse(localStorage.getItem('usuarios')) || [
+{
+usuario:'admin',
+senha:'admin',
+tipo:'admin'
+}
+];
+
+function cadastrarMercado(){
+
+let usuario =
+document.getElementById('novoUsuario').value;
+
+let senha =
+document.getElementById('novaSenha').value;
+
+if(usuario === '' || senha === ''){
+
+alert('Preencha todos os campos');
+
+return;
+
+}
+
+let existe =
+usuarios.find(u => u.usuario === usuario);
+
+if(existe){
+
+alert('Usuário já existe');
+
+return;
+
+}
+
+usuarios.push({
+usuario:usuario,
+senha:senha,
+tipo:'mercado'
+});
+
+localStorage.setItem(
+'usuarios',
+JSON.stringify(usuarios)
+);
+
+alert('Mercado cadastrado com sucesso');
+
+}
+
+function login(){
+
+let usuario =
+document.getElementById('usuario').value;
+
+let senha =
+document.getElementById('senha').value;
+
+let encontrado =
+usuarios.find(u =>
+u.usuario === usuario &&
+u.senha === senha
+);
+
+if(!encontrado){
+
+alert('Usuário ou senha incorretos');
+
+return;
+
+}
+
+usuarioAtual = encontrado.usuario;
+
+document.getElementById('loginTela')
+.classList.add('hidden');
+
+if(encontrado.tipo === 'admin'){
+
+document.getElementById('adminTela')
+.classList.remove('hidden');
+
+carregarTodosPedidos();
+
+}else{
+
+document.getElementById('appTela')
+.classList.remove('hidden');
+
+document.getElementById('mercadoLogado')
+.innerHTML = usuarioAtual;
+
+carregarPedidosMercado();
+
+}
+
+}
+
+function addProduto(nome,valor){
+
+carrinho.push({
+nome:nome,
+valor:valor
+});
+
+total += valor;
+
+document.getElementById('total')
+.innerHTML = total.toFixed(2);
+
+}
+
+function finalizarPedido(){
+
+if(carrinho.length === 0){
+
+alert('Adicione produtos');
+
+return;
+
+}
+
+let pedido = {
+mercado:usuarioAtual,
+produtos:[...carrinho],
+total:total,
+data:new Date().toLocaleString()
+};
+
+let pedidos =
+JSON.parse(localStorage.getItem('pedidos')) || [];
+
+pedidos.push(pedido);
+
+localStorage.setItem(
+'pedidos',
+JSON.stringify(pedidos)
+);
+
+alert('Pedido enviado');
+
+carrinho = [];
+total = 0;
+
+document.getElementById('total')
+.innerHTML = '0.00';
+
+carregarPedidosMercado();
+
+}
+
+function carregarPedidosMercado(){
+
+let pedidos =
+JSON.parse(localStorage.getItem('pedidos')) || [];
+
+let meusPedidos =
+pedidos.filter(p =>
+p.mercado === usuarioAtual
+);
+
+let lista =
+document.getElementById('listaPedidos');
+
+lista.innerHTML = '';
+
+meusPedidos.forEach(pedido => {
+
+let div =
+document.createElement('div');
+
+div.classList.add('pedido');
+
+div.innerHTML = `
+<h3>${pedido.mercado}</h3>
+
+<p>${pedido.data}</p>
+
+${pedido.produtos.map(p =>
+`<p>${p.nome} - R$ ${p.valor}</p>`
+).join('')}
+
+<p><b>Total:</b> R$ ${pedido.total.toFixed(2)}</p>
+`;
+
+lista.appendChild(div);
+
+});
+
+}
+
+function carregarTodosPedidos(){
+
+let pedidos =
+JSON.parse(localStorage.getItem('pedidos')) || [];
+
+let lista =
+document.getElementById('todosPedidos');
+
+lista.innerHTML = '';
+
+pedidos.forEach(pedido => {
+
+let div =
+document.createElement('div');
+
+div.classList.add('pedido');
+
+div.innerHTML = `
+<h3>${pedido.mercado}</h3>
+
+<p>${pedido.data}</p>
+
+${pedido.produtos.map(p =>
+`<p>${p.nome} - R$ ${p.valor}</p>`
+).join('')}
+
+<p><b>Total:</b> R$ ${pedido.total.toFixed(2)}</p>
+`;
+
+lista.appendChild(div);
+
+});
+
+}
+
+function logout(){
+
+location.reload();
+
+}
+
+</script>
+
+</body>
+</html>
+
+
+
